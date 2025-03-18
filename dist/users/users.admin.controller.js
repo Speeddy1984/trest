@@ -21,98 +21,60 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UsersController = void 0;
+exports.UsersAdminController = void 0;
 const common_1 = require("@nestjs/common");
 const users_service_1 = require("./users.service");
 const create_user_dto_1 = require("./dto/create-user.dto");
 const search_user_dto_1 = require("./dto/search-user.dto");
-let UsersController = class UsersController {
-    constructor(usersService) {
-        this.usersService = usersService;
-    }
-    getAllUsers() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const users = yield this.usersService.findAll({});
-            return users.map((user) => ({
-                _id: user._id,
-                username: user.username,
-                email: user.email,
-                // добавьте другие необходимые поля по заданию
-            }));
-        });
-    }
-    getAllAdminUsers() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const users = yield this.usersService.findAll({ role: 'admin' });
-            return users.map((user) => ({
-                _id: user._id,
-                username: user.username,
-                email: user.email,
-                // добавьте другие необходимые поля по заданию
-            }));
-        });
-    }
-};
-exports.UsersController = UsersController;
-__decorate([
-    (0, common_1.Get)(),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
-], UsersController.prototype, "getAllUsers", null);
-__decorate([
-    (0, common_1.Get)('admins'),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", []),
-    __metadata("design:returntype", Promise)
-], UsersController.prototype, "getAllAdminUsers", null);
-exports.UsersController = UsersController = __decorate([
-    (0, common_1.Controller)('admin/users'),
-    __metadata("design:paramtypes", [users_service_1.UsersService])
-], UsersController);
-let UsersController = class UsersController {
+const roles_guard_1 = require("../auth/guards/roles.guard");
+const authenticated_guard_1 = require("../auth/guards/authenticated.guard");
+const common_2 = require("@nestjs/common");
+let UsersAdminController = class UsersAdminController {
     constructor(usersService) {
         this.usersService = usersService;
     }
     create(data) {
         return __awaiter(this, void 0, void 0, function* () {
-            return this.usersService.create(data);
+            const user = yield this.usersService.create(data);
+            return {
+                id: user._id,
+                email: user.email,
+                name: user.name,
+                contactPhone: user.contactPhone,
+                role: user.role,
+            };
         });
     }
-    findById(id) {
+    findAll(params) {
         return __awaiter(this, void 0, void 0, function* () {
-            return this.usersService.findById(id);
-        });
-    }
-    search(params) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.usersService.findAll(params);
+            const users = yield this.usersService.findAll(params);
+            return users.map(user => ({
+                id: user._id,
+                email: user.email,
+                name: user.name,
+                contactPhone: user.contactPhone,
+            }));
         });
     }
 };
-exports.UsersController = UsersController;
+exports.UsersAdminController = UsersAdminController;
 __decorate([
     (0, common_1.Post)(),
     __param(0, (0, common_1.Body)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [create_user_dto_1.CreateUserDto]),
     __metadata("design:returntype", Promise)
-], UsersController.prototype, "create", null);
+], UsersAdminController.prototype, "create", null);
 __decorate([
-    (0, common_1.Get)(':id'),
-    __param(0, (0, common_1.Param)('id')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
-], UsersController.prototype, "findById", null);
-__decorate([
-    (0, common_1.Get)('search'),
+    (0, common_1.Get)(),
     __param(0, (0, common_1.Query)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [search_user_dto_1.SearchUserDto]),
     __metadata("design:returntype", Promise)
-], UsersController.prototype, "search", null);
-exports.UsersController = UsersController = __decorate([
-    (0, common_1.Controller)('users'),
+], UsersAdminController.prototype, "findAll", null);
+exports.UsersAdminController = UsersAdminController = __decorate([
+    (0, common_1.Controller)('api/admin/users'),
+    (0, common_1.UseGuards)(authenticated_guard_1.AuthenticatedGuard, roles_guard_1.RolesGuard),
+    (0, common_2.SetMetadata)('roles', ['admin']),
     __metadata("design:paramtypes", [users_service_1.UsersService])
-], UsersController);
+], UsersAdminController);

@@ -12,29 +12,22 @@ async function bootstrap() {
       secret: 'your-secret-key',
       resave: false,
       saveUninitialized: false,
-      cookie: { 
-        maxAge: 3600000, // 1 hour
-        secure: process.env.NODE_ENV === 'production',
-      },
     }),
   );
   
   // Инициализация Passport
   app.use(passport.initialize());
   app.use(passport.session());
+  passport.serializeUser((user, done) => {
+    console.log('Serializing user:', user);
+    done(null, user);
+  });
+  passport.deserializeUser((user: any, done) => {
+    console.log('Deserializing user:', user);
+    done(null, user);
+  });
 
   await app.listen(3000);
 }
 
 bootstrap();
-
-//// проверить 1.6. Настройка сессии в main.ts:
-// добавлено:
-// app.use(
-//   session({
-//     secret: 'your-secret-key',
-//     resave: false,
-//     saveUninitialized: false,
-//     cookie: { secure: process.env.NODE_ENV === 'production' },
-//   }),
-// );

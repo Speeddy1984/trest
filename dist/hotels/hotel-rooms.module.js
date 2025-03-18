@@ -6,21 +6,20 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UsersModule = void 0;
+exports.HotelRoomModule = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
-const users_admin_controller_1 = require("./users.admin.controller");
-const users_manager_controller_1 = require("./users.manager.controller");
-const users_service_1 = require("./users.service");
-const user_schema_1 = require("./schemas/user.schema");
-let UsersModule = class UsersModule {
+const hotel_rooms_service_1 = require("./hotel-rooms.service");
+const hotel_room_schema_1 = require("./schemas/hotel-room.schema");
+let HotelRoomModule = class HotelRoomModule {
 };
-exports.UsersModule = UsersModule;
-exports.UsersModule = UsersModule = __decorate([
+exports.HotelRoomModule = HotelRoomModule;
+exports.HotelRoomModule = HotelRoomModule = __decorate([
     (0, common_1.Module)({
-        imports: [mongoose_1.MongooseModule.forFeature([{ name: user_schema_1.User.name, schema: user_schema_1.UserSchema }])],
-        controllers: [users_admin_controller_1.UsersAdminController, users_manager_controller_1.UsersManagerController],
-        providers: [users_service_1.UsersService],
-        exports: [users_service_1.UsersService],
+        imports: [
+            mongoose_1.MongooseModule.forFeature([{ name: hotel_room_schema_1.HotelRoom.name, schema: hotel_room_schema_1.HotelRoomSchema }]),
+        ],
+        providers: [hotel_rooms_service_1.HotelRoomsService],
+        exports: [hotel_rooms_service_1.HotelRoomsService],
     })
-], UsersModule);
+], HotelRoomModule);

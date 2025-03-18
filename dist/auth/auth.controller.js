@@ -24,53 +24,50 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthController = void 0;
 const common_1 = require("@nestjs/common");
 const auth_service_1 = require("./auth.service");
-const local_guard_1 = require("./guards/local.guard");
-const register_dto_1 = require("./dto/register.dto");
+const passport_1 = require("@nestjs/passport");
 let AuthController = class AuthController {
     constructor(authService) {
         this.authService = authService;
     }
-    login(req) {
+    // POST /api/auth/login – вход
+    login(req, res) {
         return __awaiter(this, void 0, void 0, function* () {
-            if (!req.user) {
-                throw new common_1.BadRequestException('User not found in request');
-            }
-            return {
-                email: req.user.email,
-                name: req.user.name,
-                contactPhone: req.user.contactPhone,
-            };
-        });
-    }
-    logout(req, res) {
-        return __awaiter(this, void 0, void 0, function* () {
-            req.logout((err) => {
-                if (err) {
-                    throw new common_1.BadRequestException('Logout failed');
-                }
-                res.clearCookie('connect.sid');
-                res.send();
+            return new Promise((resolve, reject) => {
+                // Используем req.user! чтобы указать, что значение не undefined
+                req.logIn(req.user, (err) => {
+                    if (err) {
+                        reject(err);
+                    }
+                    else {
+                        console.log('User after login:', req.user);
+                        resolve(res.json({
+                            email: req.user.email,
+                            name: req.user.name,
+                            contactPhone: req.user.contactPhone,
+                        }));
+                    }
+                });
             });
         });
     }
-    register(data) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const user = yield this.authService.registerClient(data);
-            return {
-                id: user._id,
-                email: user.email,
-                name: user.name,
-            };
+    // POST /api/auth/logout – выход
+    logout(req, res) {
+        req.logout((err) => {
+            if (err) {
+                return res.status(500).json({ message: 'Ошибка при разлогинивании' });
+            }
+            return res.status(200).json({});
         });
     }
 };
 exports.AuthController = AuthController;
 __decorate([
     (0, common_1.Post)('login'),
-    (0, common_1.UseGuards)(local_guard_1.LocalGuard),
+    (0, common_1.UseGuards)((0, passport_1.AuthGuard)('local')),
     __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Res)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
 ], AuthController.prototype, "login", null);
 __decorate([
@@ -79,15 +76,8 @@ __decorate([
     __param(1, (0, common_1.Res)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object, Object]),
-    __metadata("design:returntype", Promise)
+    __metadata("design:returntype", void 0)
 ], AuthController.prototype, "logout", null);
-__decorate([
-    (0, common_1.Post)('client/register'),
-    __param(0, (0, common_1.Body)()),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [register_dto_1.RegisterDto]),
-    __metadata("design:returntype", Promise)
-], AuthController.prototype, "register", null);
 exports.AuthController = AuthController = __decorate([
     (0, common_1.Controller)('api/auth'),
     __metadata("design:paramtypes", [auth_service_1.AuthService])

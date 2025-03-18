@@ -1,68 +1,43 @@
-import {
-  Controller,
-  Post,
-  Body,
-  UseGuards,
-  Req,
-  Res,
-  BadRequestException,
-} from '@nestjs/common';
-import { Request, Response } from 'express';
+import { Controller, Post, UseGuards, Req, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { LocalGuard } from './guards/local.guard';
-import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
-
-// Расширяем типы Express
-declare module 'express' {
-  interface Request {
-    user?: {
-      email: string;
-      name: string;
-      contactPhone?: string;
-      role: string;
-      _id: string;
-    };
-    logout: (callback: (err: Error) => void) => void;
-  }
-}
+import { AuthGuard } from '@nestjs/passport';
+import { Response, Request } from 'express';
 
 @Controller('api/auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  // POST /api/auth/login – вход
   @Post('login')
-  @UseGuards(LocalGuard)
-  async login(@Req() req: Request) {
-    if (!req.user) {
-      throw new BadRequestException('User not found in request');
-    }
-    
-    return {
-      email: req.user.email,
-      name: req.user.name,
-      contactPhone: req.user.contactPhone,
-    };
-  }
-
-  @Post('logout')
-  async logout(@Req() req: Request, @Res() res: Response) {
-    req.logout((err: Error) => {
-      if (err) {
-        throw new BadRequestException('Logout failed');
-      }
-      res.clearCookie('connect.sid');
-      res.send();
+  @UseGuards(AuthGuard('local'))
+  async login(@Req() req: Request, @Res() res: Response) {
+    return new Promise((resolve, reject) => {
+      // Используем req.user! чтобы указать, что значение не undefined
+      req.logIn(req.user!, (err: Error | null) => {
+        if (err) {
+          reject(err);
+        } else {
+          console.log('User after login:', req.user);
+          resolve(
+            res.json({
+              email: req.user!.email,
+              name: req.user!.name,
+              contactPhone: req.user!.contactPhone,
+            }),
+          );
+        }
+      });
     });
   }
 
-  @Post('client/register')
-  async register(@Body() data: RegisterDto) {
-    const user = await this.authService.registerClient(data);
-    return {
-      id: user._id,
-      email: user.email,
-      name: user.name,
-    };
+  // POST /api/auth/logout – выход
+  @Post('logout')
+  logout(@Req() req: Request, @Res() res: Response) {
+    req.logout((err: Error | null) => {
+      if (err) {
+        return res.status(500).json({ message: 'Ошибка при разлогинивании' });
+      }
+      return res.status(200).json({});
+    });
   }
 }

@@ -30,71 +30,65 @@ let HotelRoomsService = class HotelRoomsService {
     constructor(hotelRoomModel) {
         this.hotelRoomModel = hotelRoomModel;
     }
-    search(params) {
+    getRooms() {
         return __awaiter(this, void 0, void 0, function* () {
-            const { limit, offset, hotel, isEnabled } = params;
-            const query = {};
-            if (hotel)
-                query.hotel = hotel;
-            if (isEnabled !== undefined)
-                query.isEnabled = isEnabled;
-            const rooms = yield this.hotelRoomModel
-                .find(query)
-                .skip(offset || 0)
-                .limit(limit || 10)
-                .populate('hotel', 'id title')
-                .exec();
-            return rooms.map((room) => ({
-                id: room._id,
-                description: room.description,
-                images: room.images,
-                hotel: {
-                    id: room.hotel._id,
-                    title: room.hotel.title,
-                },
-            }));
+            const rooms = yield this.hotelRoomModel.find().populate('hotel');
+            return rooms.map(room => {
+                var _a, _b;
+                return ({
+                    _id: room._id,
+                    title: (_a = room.hotel) === null || _a === void 0 ? void 0 : _a.title,
+                    description: (_b = room.hotel) === null || _b === void 0 ? void 0 : _b.description,
+                    // добавьте другие необходимые поля по заданию
+                });
+            });
+        });
+    }
+    getRoomDetails(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a, _b;
+            const room = yield this.hotelRoomModel.findById(id).populate('hotel');
+            if (!room)
+                return null;
+            return {
+                _id: room._id,
+                title: (_a = room.hotel) === null || _a === void 0 ? void 0 : _a.title,
+                description: (_b = room.hotel) === null || _b === void 0 ? void 0 : _b.description,
+                // добавьте другие необходимые поля по заданию
+            };
+        });
+    }
+    search(query) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const rooms = yield this.hotelRoomModel.find(query).populate('hotel');
+            return rooms.map(room => {
+                var _a, _b;
+                return ({
+                    _id: room._id,
+                    title: (_a = room.hotel) === null || _a === void 0 ? void 0 : _a.title,
+                    description: (_b = room.hotel) === null || _b === void 0 ? void 0 : _b.description,
+                    // добавьте другие необходимые поля по заданию
+                });
+            });
         });
     }
     findById(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const room = yield this.hotelRoomModel
-                .findById(id)
-                .populate('hotel', 'id title description')
-                .exec();
-            if (!room) {
-                throw new common_1.NotFoundException('Room not found');
-            }
-            return {
-                id: room._id,
-                description: room.description,
-                images: room.images,
-                hotel: {
-                    id: room.hotel._id,
-                    title: room.hotel.title,
-                    description: room.hotel.description,
-                },
-            };
+            return this.getRoomDetails(id);
         });
     }
     create(data) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { hotelId, description, images } = data;
-            const room = new this.hotelRoomModel({
-                hotel: hotelId,
-                description,
-                images,
-            });
-            return room.save();
+            const newRoom = new this.hotelRoomModel(data);
+            yield newRoom.save();
+            return newRoom;
         });
     }
     update(id, data) {
         return __awaiter(this, void 0, void 0, function* () {
             const room = yield this.hotelRoomModel
                 .findByIdAndUpdate(id, data, { new: true })
-                .exec();
-            if (!room) {
-                throw new common_1.NotFoundException('Room not found');
-            }
+                .populate('hotel');
             return room;
         });
     }

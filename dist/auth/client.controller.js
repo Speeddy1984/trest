@@ -8,6 +8,9 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
 var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
+var __param = (this && this.__param) || function (paramIndex, decorator) {
+    return function (target, key) { decorator(target, key, paramIndex); }
+};
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
@@ -18,29 +21,41 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.LocalStrategy = void 0;
-const passport_local_1 = require("passport-local");
-const passport_1 = require("@nestjs/passport");
+exports.ClientController = void 0;
 const common_1 = require("@nestjs/common");
-const auth_service_1 = require("../auth.service");
-let LocalStrategy = class LocalStrategy extends (0, passport_1.PassportStrategy)(passport_local_1.Strategy) {
-    constructor(authService) {
-        // Настраиваем поле usernameField как email
-        super({ usernameField: 'email' });
-        this.authService = authService;
+const users_service_1 = require("../users/users.service");
+const create_user_dto_1 = require("../users/dto/create-user.dto");
+let ClientController = class ClientController {
+    constructor(usersService) {
+        this.usersService = usersService;
     }
-    validate(email, password) {
+    // POST /api/client/register – регистрация
+    register(data) {
         return __awaiter(this, void 0, void 0, function* () {
-            const user = yield this.authService.validateUser(email, password);
-            if (!user) {
-                throw new common_1.UnauthorizedException();
+            const existingUser = yield this.usersService.findByEmail(data.email);
+            if (existingUser) {
+                throw new common_1.BadRequestException('Email уже занят');
             }
-            return user;
+            // Принудительно устанавливаем роль client, даже если будет другая роль
+            data.role = 'client';
+            const user = yield this.usersService.create(data);
+            return {
+                id: user._id,
+                email: user.email,
+                name: user.name,
+            };
         });
     }
 };
-exports.LocalStrategy = LocalStrategy;
-exports.LocalStrategy = LocalStrategy = __decorate([
-    (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [auth_service_1.AuthService])
-], LocalStrategy);
+exports.ClientController = ClientController;
+__decorate([
+    (0, common_1.Post)('register'),
+    __param(0, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [create_user_dto_1.CreateUserDto]),
+    __metadata("design:returntype", Promise)
+], ClientController.prototype, "register", null);
+exports.ClientController = ClientController = __decorate([
+    (0, common_1.Controller)('api/client'),
+    __metadata("design:paramtypes", [users_service_1.UsersService])
+], ClientController);

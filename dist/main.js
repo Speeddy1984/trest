@@ -24,25 +24,19 @@ function bootstrap() {
             secret: 'your-secret-key',
             resave: false,
             saveUninitialized: false,
-            cookie: {
-                maxAge: 3600000, // 1 hour
-                secure: process.env.NODE_ENV === 'production',
-            },
         }));
         // Инициализация Passport
         app.use(passport_1.default.initialize());
         app.use(passport_1.default.session());
+        passport_1.default.serializeUser((user, done) => {
+            console.log('Serializing user:', user);
+            done(null, user);
+        });
+        passport_1.default.deserializeUser((user, done) => {
+            console.log('Deserializing user:', user);
+            done(null, user);
+        });
         yield app.listen(3000);
     });
 }
 bootstrap();
-//// проверить 1.6. Настройка сессии в main.ts:
-// добавлено:
-// app.use(
-//   session({
-//     secret: 'your-secret-key',
-//     resave: false,
-//     saveUninitialized: false,
-//     cookie: { secure: process.env.NODE_ENV === 'production' },
-//   }),
-// );

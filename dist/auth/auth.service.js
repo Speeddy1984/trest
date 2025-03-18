@@ -50,40 +50,55 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AuthService = void 0;
 const common_1 = require("@nestjs/common");
 const users_service_1 = require("../users/users.service");
-const jwt_1 = require("@nestjs/jwt");
 const bcrypt = __importStar(require("bcrypt"));
 let AuthService = class AuthService {
-    constructor(usersService, jwtService) {
+    constructor(usersService) {
         this.usersService = usersService;
-        this.jwtService = jwtService;
     }
-    registerClient(data) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const existingUser = yield this.usersService.findByEmail(data.email);
-            if (existingUser) {
-                throw new common_1.BadRequestException('Email already exists');
-            }
-            const hashedPassword = yield bcrypt.hash(data.password, 10);
-            return this.usersService.create(Object.assign(Object.assign({}, data), { passwordHash: hashedPassword, role: 'client' }));
-        });
-    }
-    validateUser(email, pass) {
+    validateUser(email, password) {
         return __awaiter(this, void 0, void 0, function* () {
             const user = yield this.usersService.findByEmail(email);
-            if (!user || !(yield bcrypt.compare(pass, user.passwordHash))) {
-                throw new common_1.UnauthorizedException('Invalid credentials');
+            if (!user) {
+                throw new common_1.UnauthorizedException('Неверный email или пароль');
             }
-            return user;
+            const isMatch = yield bcrypt.compare(password, user.passwordHash);
+            if (!isMatch) {
+                throw new common_1.UnauthorizedException('Неверный email или пароль');
+            }
+            // Исключаем поле passwordHash из возвращаемого объекта
+            const _a = user.toObject(), { passwordHash } = _a, result = __rest(_a, ["passwordHash"]);
+            return result;
+        });
+    }
+    login(user) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // Здесь можно настроить JWT или просто вернуть данные,
+            // т.к. Passport с сессиями сохранит пользователя в сессии.
+            return {
+                email: user.email,
+                name: user.name,
+                contactPhone: user.contactPhone,
+            };
         });
     }
 };
 exports.AuthService = AuthService;
 exports.AuthService = AuthService = __decorate([
     (0, common_1.Injectable)(),
-    __metadata("design:paramtypes", [users_service_1.UsersService,
-        jwt_1.JwtService])
+    __metadata("design:paramtypes", [users_service_1.UsersService])
 ], AuthService);

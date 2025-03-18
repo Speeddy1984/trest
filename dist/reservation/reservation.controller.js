@@ -24,104 +24,83 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ReservationController = void 0;
 const common_1 = require("@nestjs/common");
 const reservation_service_1 = require("./reservation.service");
-const create_reservation_dto_1 = require("./dto/create-reservation.dto");
-const roles_guard_1 = require("../auth/guards/roles.guard");
-const roles_decorator_1 = require("../auth/decorators/roles.decorator");
-const user_role_enum_1 = require("../users/enums/user-role.enum");
 let ReservationController = class ReservationController {
     constructor(reservationService) {
         this.reservationService = reservationService;
     }
-    // Бронирование номера клиентом (POST /api/client/reservations)
-    create(req, dto) {
+    createReservation(req, body) {
         return __awaiter(this, void 0, void 0, function* () {
+            var _a, _b, _c, _d, _e, _f;
             const userId = req.user['_id'];
-            const reservation = yield this.reservationService.addReservation(userId, dto);
-            // Форматирование ответа
+            const reservation = yield this.reservationService.createReservation(userId, body);
             return {
-                startDate: reservation.startDate.toISOString(),
-                endDate: reservation.endDate.toISOString(),
-                hotelRoom: {
-                    description: reservation.hotelRoom.description,
-                    images: reservation.hotelRoom.images,
-                },
-                hotel: {
-                    title: reservation.hotelRoom.hotel.title,
-                    description: reservation.hotelRoom.hotel.description,
-                },
+                _id: reservation._id,
+                description: (_a = reservation.hotelRoom) === null || _a === void 0 ? void 0 : _a.description,
+                images: (_b = reservation.hotelRoom) === null || _b === void 0 ? void 0 : _b.images,
+                title: (_d = (_c = reservation.hotelRoom) === null || _c === void 0 ? void 0 : _c.hotel) === null || _d === void 0 ? void 0 : _d.title,
+                hotelDescription: (_f = (_e = reservation.hotelRoom) === null || _e === void 0 ? void 0 : _e.hotel) === null || _f === void 0 ? void 0 : _f.description,
+                // добавьте другие необходимые поля по заданию
             };
         });
     }
-    // Список броней текущего пользователя (GET /api/client/reservations)
-    getUserReservations(req) {
+    updateReservation(req, body) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a, _b, _c, _d, _e, _f;
+            const userId = req.user['_id'];
+            const reservation = yield this.reservationService.updateReservation(userId, body);
+            return {
+                _id: reservation._id,
+                description: (_a = reservation.hotelRoom) === null || _a === void 0 ? void 0 : _a.description,
+                images: (_b = reservation.hotelRoom) === null || _b === void 0 ? void 0 : _b.images,
+                title: (_d = (_c = reservation.hotelRoom) === null || _c === void 0 ? void 0 : _c.hotel) === null || _d === void 0 ? void 0 : _d.title,
+                hotelDescription: (_f = (_e = reservation.hotelRoom) === null || _e === void 0 ? void 0 : _e.hotel) === null || _f === void 0 ? void 0 : _f.description,
+                // добавьте другие необходимые поля по заданию
+            };
+        });
+    }
+    getReservations(req) {
         return __awaiter(this, void 0, void 0, function* () {
             const userId = req.user['_id'];
             const reservations = yield this.reservationService.getReservations(userId);
-            // Форматирование ответа
-            return reservations.map((reservation) => ({
-                startDate: reservation.startDate.toISOString(),
-                endDate: reservation.endDate.toISOString(),
-                hotelRoom: {
-                    description: reservation.hotelRoom.description,
-                    images: reservation.hotelRoom.images,
-                },
-                hotel: {
-                    title: reservation.hotelRoom.hotel.title,
-                    description: reservation.hotelRoom.hotel.description,
-                },
-            }));
-        });
-    }
-    // Список броней конкретного пользователя (GET /api/manager/reservations/:userId)
-    getReservationsByUser(userId) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const reservations = yield this.reservationService.getReservations(userId);
-            // Форматирование ответа
-            return reservations.map((reservation) => ({
-                startDate: reservation.startDate.toISOString(),
-                endDate: reservation.endDate.toISOString(),
-                hotelRoom: {
-                    description: reservation.hotelRoom.description,
-                    images: reservation.hotelRoom.images,
-                },
-                hotel: {
-                    title: reservation.hotelRoom.hotel.title,
-                    description: reservation.hotelRoom.hotel.description,
-                },
-            }));
+            return reservations.map((reservation) => {
+                var _a, _b, _c, _d, _e, _f;
+                return ({
+                    _id: reservation._id,
+                    description: (_a = reservation.hotelRoom) === null || _a === void 0 ? void 0 : _a.description,
+                    images: (_b = reservation.hotelRoom) === null || _b === void 0 ? void 0 : _b.images,
+                    title: (_d = (_c = reservation.hotelRoom) === null || _c === void 0 ? void 0 : _c.hotel) === null || _d === void 0 ? void 0 : _d.title,
+                    hotelDescription: (_f = (_e = reservation.hotelRoom) === null || _e === void 0 ? void 0 : _e.hotel) === null || _f === void 0 ? void 0 : _f.description,
+                    // добавьте другие необходимые поля по заданию
+                });
+            });
         });
     }
 };
 exports.ReservationController = ReservationController;
 __decorate([
-    (0, common_1.Post)('api/client/reservations'),
-    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(user_role_enum_1.UserRole.Client),
+    (0, common_1.Post)(),
     __param(0, (0, common_1.Req)()),
     __param(1, (0, common_1.Body)()),
     __metadata("design:type", Function),
-    __metadata("design:paramtypes", [Object, create_reservation_dto_1.CreateReservationDto]),
+    __metadata("design:paramtypes", [Object, Object]),
     __metadata("design:returntype", Promise)
-], ReservationController.prototype, "create", null);
+], ReservationController.prototype, "createReservation", null);
 __decorate([
-    (0, common_1.Get)('api/client/reservations'),
-    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(user_role_enum_1.UserRole.Client),
+    (0, common_1.Post)('update'),
+    __param(0, (0, common_1.Req)()),
+    __param(1, (0, common_1.Body)()),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [Object, Object]),
+    __metadata("design:returntype", Promise)
+], ReservationController.prototype, "updateReservation", null);
+__decorate([
+    (0, common_1.Get)(),
     __param(0, (0, common_1.Req)()),
     __metadata("design:type", Function),
     __metadata("design:paramtypes", [Object]),
     __metadata("design:returntype", Promise)
-], ReservationController.prototype, "getUserReservations", null);
-__decorate([
-    (0, common_1.Get)('api/manager/reservations/:userId'),
-    (0, common_1.UseGuards)(roles_guard_1.RolesGuard),
-    (0, roles_decorator_1.Roles)(user_role_enum_1.UserRole.Manager),
-    __param(0, (0, common_1.Param)('userId')),
-    __metadata("design:type", Function),
-    __metadata("design:paramtypes", [String]),
-    __metadata("design:returntype", Promise)
-], ReservationController.prototype, "getReservationsByUser", null);
+], ReservationController.prototype, "getReservations", null);
 exports.ReservationController = ReservationController = __decorate([
-    (0, common_1.Controller)(),
+    (0, common_1.Controller)('reservations'),
     __metadata("design:paramtypes", [reservation_service_1.ReservationService])
 ], ReservationController);

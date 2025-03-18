@@ -30,10 +30,12 @@ __decorate([
     __metadata("design:type", String)
 ], SearchUserDto.prototype, "contactPhone", void 0);
 __decorate([
+    (0, class_validator_1.IsNumber)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], SearchUserDto.prototype, "limit", void 0);
 __decorate([
+    (0, class_validator_1.IsNumber)(),
     (0, class_validator_1.IsOptional)(),
     __metadata("design:type", Number)
 ], SearchUserDto.prototype, "offset", void 0);

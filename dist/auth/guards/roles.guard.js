@@ -17,11 +17,24 @@ let RolesGuard = class RolesGuard {
         this.reflector = reflector;
     }
     canActivate(context) {
-        const requiredRoles = this.reflector.get('roles', context.getHandler());
-        if (!requiredRoles)
+        const requiredRoles = this.reflector.getAllAndOverride('roles', [
+            context.getHandler(),
+            context.getClass(),
+        ]);
+        if (!requiredRoles) {
             return true;
-        const { user } = context.switchToHttp().getRequest();
-        return requiredRoles.some((role) => (user === null || user === void 0 ? void 0 : user.role) === role);
+        }
+        const request = context.switchToHttp().getRequest();
+        const user = request.user;
+        console.log('RolesGuard, user:', user);
+        // Если вдруг пользователь отсутствует – выбрасываем UnauthorizedException (но обычно AuthenticatedGuard уже гарантирует, что user есть)
+        if (!user) {
+            throw new common_1.UnauthorizedException('Пользователь не аутентифицирован');
+        }
+        if (!requiredRoles.includes(user.role)) {
+            throw new common_1.ForbiddenException('Forbidden resource');
+        }
+        return true;
     }
 };
 exports.RolesGuard = RolesGuard;

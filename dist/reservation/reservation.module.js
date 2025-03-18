@@ -9,8 +9,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ReservationModule = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
-const reservation_controller_1 = require("./reservation.controller");
 const reservation_service_1 = require("./reservation.service");
+const reservation_controller_1 = require("./reservation.controller");
 const reservation_schema_1 = require("./schemas/reservation.schema");
 const hotel_rooms_module_1 = require("../hotels/hotel-rooms.module");
 let ReservationModule = class ReservationModule {
@@ -19,10 +19,8 @@ exports.ReservationModule = ReservationModule;
 exports.ReservationModule = ReservationModule = __decorate([
     (0, common_1.Module)({
         imports: [
-            mongoose_1.MongooseModule.forFeature([
-                { name: reservation_schema_1.Reservation.name, schema: reservation_schema_1.ReservationSchema },
-            ]),
             hotel_rooms_module_1.HotelRoomModule,
+            mongoose_1.MongooseModule.forFeature([{ name: reservation_schema_1.Reservation.name, schema: reservation_schema_1.ReservationSchema }]),
         ],
         controllers: [reservation_controller_1.ReservationController],
         providers: [reservation_service_1.ReservationService],

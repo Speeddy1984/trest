@@ -20,71 +20,46 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ReservationService = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
 const reservation_schema_1 = require("./schemas/reservation.schema");
-const hotel_room_schema_1 = require("../hotels/schemas/hotel-room.schema");
 let ReservationService = class ReservationService {
-    constructor(reservationModel, hotelRoomModel) {
+    constructor(reservationModel) {
         this.reservationModel = reservationModel;
-        this.hotelRoomModel = hotelRoomModel;
     }
-    addReservation(userId, dto) {
+    createReservation(userId, data) {
         return __awaiter(this, void 0, void 0, function* () {
-            const room = yield this.hotelRoomModel.findById(dto.hotelRoom);
-            if (!(room === null || room === void 0 ? void 0 : room.isEnabled)) {
-                throw new common_1.BadRequestException('Room is not available');
-            }
-            const isAvailable = yield this.isRoomAvailable(dto.hotelRoom, dto.startDate, dto.endDate);
-            if (!isAvailable) {
-                throw new common_1.BadRequestException('Room is already booked');
-            }
-            const reservation = new this.reservationModel({
-                userId,
-                hotelRoom: dto.hotelRoom,
-                startDate: dto.startDate,
-                endDate: dto.endDate,
-            });
-            return reservation.save();
+            const newReservation = new this.reservationModel(Object.assign(Object.assign({}, data), { user: userId }));
+            yield newReservation.save();
+            // Если требуется populate других полей, например, hotelRoom:
+            return newReservation.populate('hotelRoom');
+        });
+    }
+    updateReservation(userId, data) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const { _id } = data, updateData = __rest(data, ["_id"]);
+            const updatedReservation = yield this.reservationModel.findOneAndUpdate({ _id, user: userId }, updateData, { new: true }).populate('hotelRoom');
+            return updatedReservation;
         });
     }
     getReservations(userId) {
         return __awaiter(this, void 0, void 0, function* () {
-            return this.reservationModel
-                .find({ userId })
-                .populate({
-                path: 'hotelRoom',
-                populate: { path: 'hotel' },
-            })
-                .exec();
-        });
-    }
-    removeReservation(userId, id) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const reservation = yield this.reservationModel.findById(id);
-            if (!reservation) {
-                throw new common_1.NotFoundException('Reservation not found');
-            }
-            if (reservation.userId.toString() !== userId) {
-                throw new common_1.BadRequestException('Cannot delete others reservations');
-            }
-            return this.reservationModel.findByIdAndDelete(id).exec();
-        });
-    }
-    isRoomAvailable(roomId, startDate, endDate) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const overlapping = yield this.reservationModel
-                .find({
-                hotelRoom: roomId,
-                $or: [
-                    { startDate: { $lt: endDate }, endDate: { $gt: startDate } },
-                ],
-            })
-                .exec();
-            return overlapping.length === 0;
+            const reservations = yield this.reservationModel.find({ user: userId }).populate('hotelRoom');
+            return reservations;
         });
     }
 };
@@ -92,7 +67,5 @@ exports.ReservationService = ReservationService;
 exports.ReservationService = ReservationService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(reservation_schema_1.Reservation.name)),
-    __param(1, (0, mongoose_1.InjectModel)(hotel_room_schema_1.HotelRoom.name)),
-    __metadata("design:paramtypes", [mongoose_2.Model,
-        mongoose_2.Model])
+    __metadata("design:paramtypes", [mongoose_2.Model])
 ], ReservationService);

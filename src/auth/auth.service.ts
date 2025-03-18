@@ -1,39 +1,33 @@
-import { 
-  Injectable, 
-  BadRequestException,
-  UnauthorizedException 
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
-import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { RegisterDto } from './dto/register.dto';
+import { User } from '../users/schemas/user.schema';
 
 @Injectable()
 export class AuthService {
-  constructor(
-    private usersService: UsersService,
-    private jwtService: JwtService,
-  ) {}
+  constructor(private readonly usersService: UsersService) {}
 
-  async registerClient(data: RegisterDto) {
-    const existingUser = await this.usersService.findByEmail(data.email);
-    if (existingUser) {
-      throw new BadRequestException('Email already exists');
+  async validateUser(email: string, password: string): Promise<any> {
+    const user = await this.usersService.findByEmail(email);
+    if (!user) {
+      throw new UnauthorizedException('Неверный email или пароль');
     }
-
-    const hashedPassword = await bcrypt.hash(data.password, 10);
-    return this.usersService.create({
-      ...data,
-      passwordHash: hashedPassword,
-      role: 'client',
-    });
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
+    if (!isMatch) {
+      throw new UnauthorizedException('Неверный email или пароль');
+    }
+    // Исключаем поле passwordHash из возвращаемого объекта
+    const { passwordHash, ...result } = user.toObject();
+    return result;
   }
 
-  async validateUser(email: string, pass: string): Promise<any> {
-    const user = await this.usersService.findByEmail(email);
-    if (!user || !(await bcrypt.compare(pass, user.passwordHash))) {
-      throw new UnauthorizedException('Invalid credentials');
-    }
-    return user;
+  async login(user: any) {
+    // Здесь можно настроить JWT или просто вернуть данные,
+    // т.к. Passport с сессиями сохранит пользователя в сессии.
+    return {
+      email: user.email,
+      name: user.name,
+      contactPhone: user.contactPhone,
+    };
   }
 }

@@ -1,4 +1,4 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, IsNumber } from 'class-validator';
 
 export class SearchUserDto {
   @IsString()
@@ -13,9 +13,11 @@ export class SearchUserDto {
   @IsOptional()
   contactPhone?: string;
 
+  @IsNumber()
   @IsOptional()
   limit?: number;
 
+  @IsNumber()
   @IsOptional()
   offset?: number;
 }
