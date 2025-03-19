@@ -9,28 +9,28 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UpdateHotelRoomDto = void 0;
+exports.SearchHotelRoomDto = void 0;
 const class_validator_1 = require("class-validator");
-class UpdateHotelRoomDto {
+class SearchHotelRoomDto {
 }
-exports.UpdateHotelRoomDto = UpdateHotelRoomDto;
+exports.SearchHotelRoomDto = SearchHotelRoomDto;
 __decorate([
-    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], UpdateHotelRoomDto.prototype, "description", void 0);
+], SearchHotelRoomDto.prototype, "hotel", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsBoolean)(),
     __metadata("design:type", Boolean)
-], UpdateHotelRoomDto.prototype, "isEnabled", void 0);
+], SearchHotelRoomDto.prototype, "isEnabled", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsArray)(),
-    __metadata("design:type", Array)
-], UpdateHotelRoomDto.prototype, "images", void 0);
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], SearchHotelRoomDto.prototype, "limit", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsString)(),
-    __metadata("design:type", String)
-], UpdateHotelRoomDto.prototype, "hotelId", void 0);
+    (0, class_validator_1.IsNumber)(),
+    __metadata("design:type", Number)
+], SearchHotelRoomDto.prototype, "offset", void 0);

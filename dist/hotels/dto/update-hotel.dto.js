@@ -15,12 +15,12 @@ class UpdateHotelDto {
 }
 exports.UpdateHotelDto = UpdateHotelDto;
 __decorate([
-    (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpdateHotelDto.prototype, "title", void 0);
 __decorate([
-    (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], UpdateHotelDto.prototype, "description", void 0);

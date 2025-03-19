@@ -15,16 +15,17 @@ class SearchReservationDto {
 }
 exports.SearchReservationDto = SearchReservationDto;
 __decorate([
-    (0, class_validator_1.IsMongoId)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], SearchReservationDto.prototype, "userId", void 0);
 __decorate([
-    (0, class_validator_1.IsDate)(),
     (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Date)
-], SearchReservationDto.prototype, "dateStart", void 0);
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], SearchReservationDto.prototype, "startDate", void 0);
 __decorate([
-    (0, class_validator_1.IsDate)(),
     (0, class_validator_1.IsOptional)(),
-    __metadata("design:type", Date)
-], SearchReservationDto.prototype, "dateEnd", void 0);
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], SearchReservationDto.prototype, "endDate", void 0);

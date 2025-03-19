@@ -12,12 +12,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.HotelRoomSchema = exports.HotelRoom = void 0;
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
-const hotel_schema_1 = require("./hotel.schema");
-let HotelRoom = class HotelRoom extends mongoose_2.Document {
+let HotelRoom = class HotelRoom {
 };
 exports.HotelRoom = HotelRoom;
 __decorate([
-    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: hotel_schema_1.Hotel.name, required: true }),
+    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'Hotel', required: true }),
     __metadata("design:type", mongoose_2.Types.ObjectId)
 ], HotelRoom.prototype, "hotel", void 0);
 __decorate([
@@ -25,11 +24,11 @@ __decorate([
     __metadata("design:type", String)
 ], HotelRoom.prototype, "description", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ default: [] }),
+    (0, mongoose_1.Prop)({ type: [String], default: [] }),
     __metadata("design:type", Array)
 ], HotelRoom.prototype, "images", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ default: true }),
+    (0, mongoose_1.Prop)({ required: true, default: true }),
     __metadata("design:type", Boolean)
 ], HotelRoom.prototype, "isEnabled", void 0);
 exports.HotelRoom = HotelRoom = __decorate([

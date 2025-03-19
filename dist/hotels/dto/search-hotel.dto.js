@@ -15,15 +15,17 @@ class SearchHotelDto {
 }
 exports.SearchHotelDto = SearchHotelDto;
 __decorate([
-    (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], SearchHotelDto.prototype, "title", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], SearchHotelDto.prototype, "limit", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsNumber)(),
     __metadata("design:type", Number)
 ], SearchHotelDto.prototype, "offset", void 0);

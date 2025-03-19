@@ -15,12 +15,17 @@ class CreateHotelRoomDto {
 }
 exports.CreateHotelRoomDto = CreateHotelRoomDto;
 __decorate([
-    (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateHotelRoomDto.prototype, "hotelId", void 0);
+__decorate([
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateHotelRoomDto.prototype, "description", void 0);
 __decorate([
-    (0, class_validator_1.IsString)(),
-    (0, class_validator_1.IsNotEmpty)(),
-    __metadata("design:type", String)
-], CreateHotelRoomDto.prototype, "hotelId", void 0);
+    (0, class_validator_1.IsOptional)(),
+    (0, class_validator_1.IsArray)(),
+    __metadata("design:type", Array)
+], CreateHotelRoomDto.prototype, "images", void 0);

@@ -24,37 +24,84 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.HotelsService = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
-const mongoose_2 = require("mongoose");
 const hotel_schema_1 = require("./schemas/hotel.schema");
+const hotel_room_schema_1 = require("./schemas/hotel-room.schema");
+const mongoose_2 = require("mongoose");
 let HotelsService = class HotelsService {
-    constructor(hotelModel) {
+    constructor(hotelModel, hotelRoomModel) {
         this.hotelModel = hotelModel;
+        this.hotelRoomModel = hotelRoomModel;
     }
-    create(data) {
+    // Методы для гостиниц
+    createHotel(data) {
         return __awaiter(this, void 0, void 0, function* () {
-            const hotel = new this.hotelModel(data);
-            return hotel.save();
+            const newHotel = new this.hotelModel(data);
+            return newHotel.save();
         });
     }
-    findAll(params) {
+    findHotelById(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const { limit, offset } = params;
-            return this.hotelModel
-                .find()
-                .skip(offset || 0)
-                .limit(limit || 10)
-                .exec();
-        });
-    }
-    update(id, data) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const hotel = yield this.hotelModel
-                .findByIdAndUpdate(id, data, { new: true })
-                .exec();
+            const hotel = yield this.hotelModel.findById(id);
             if (!hotel) {
-                throw new common_1.NotFoundException('Hotel not found');
+                throw new Error('Hotel not found');
             }
             return hotel;
+        });
+    }
+    searchHotels(params) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const filter = {};
+            if (params.title) {
+                filter.title = { $regex: params.title, $options: 'i' };
+            }
+            return this.hotelModel.find(filter).limit(params.limit).skip(params.offset);
+        });
+    }
+    updateHotel(id, data) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const hotel = yield this.hotelModel.findByIdAndUpdate(id, data, { new: true });
+            if (!hotel) {
+                throw new Error('Hotel not found');
+            }
+            return hotel;
+        });
+    }
+    // Методы для номеров гостиниц
+    createHotelRoom(data) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const newRoom = new this.hotelRoomModel(data);
+            return newRoom.save();
+        });
+    }
+    findHotelRoomById(id) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const room = yield this.hotelRoomModel.findById(id).populate('hotel');
+            if (!room) {
+                throw new Error('Hotel room not found');
+            }
+            return room;
+        });
+    }
+    searchHotelRooms(params) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const filter = { hotel: params.hotel };
+            if (typeof params.isEnabled === 'boolean') {
+                filter.isEnabled = params.isEnabled;
+            }
+            return this.hotelRoomModel
+                .find(filter)
+                .limit(params.limit)
+                .skip(params.offset)
+                .populate('hotel');
+        });
+    }
+    updateHotelRoom(id, data) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const room = yield this.hotelRoomModel.findByIdAndUpdate(id, data, { new: true }).populate('hotel');
+            if (!room) {
+                throw new Error('Hotel room not found');
+            }
+            return room;
         });
     }
 };
@@ -62,5 +109,7 @@ exports.HotelsService = HotelsService;
 exports.HotelsService = HotelsService = __decorate([
     (0, common_1.Injectable)(),
     __param(0, (0, mongoose_1.InjectModel)(hotel_schema_1.Hotel.name)),
-    __metadata("design:paramtypes", [mongoose_2.Model])
+    __param(1, (0, mongoose_1.InjectModel)(hotel_room_schema_1.HotelRoom.name)),
+    __metadata("design:paramtypes", [mongoose_2.Model,
+        mongoose_2.Model])
 ], HotelsService);

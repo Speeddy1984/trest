@@ -15,14 +15,22 @@ class CreateReservationDto {
 }
 exports.CreateReservationDto = CreateReservationDto;
 __decorate([
-    (0, class_validator_1.IsMongoId)(),
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], CreateReservationDto.prototype, "hotelRoom", void 0);
 __decorate([
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
+    __metadata("design:type", String)
+], CreateReservationDto.prototype, "hotelId", void 0);
+__decorate([
+    (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsDateString)(),
-    __metadata("design:type", Date)
+    __metadata("design:type", String)
 ], CreateReservationDto.prototype, "startDate", void 0);
 __decorate([
+    (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsDateString)(),
-    __metadata("design:type", Date)
+    __metadata("design:type", String)
 ], CreateReservationDto.prototype, "endDate", void 0);

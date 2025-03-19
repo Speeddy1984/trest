@@ -12,27 +12,29 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.ReservationSchema = exports.Reservation = void 0;
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
-const user_schema_1 = require("../../users/schemas/user.schema");
-const hotel_room_schema_1 = require("../../hotels/schemas/hotel-room.schema");
-let Reservation = class Reservation extends mongoose_2.Document {
+let Reservation = class Reservation {
 };
 exports.Reservation = Reservation;
 __decorate([
-    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: user_schema_1.User.name, required: true }),
+    (0, mongoose_1.Prop)({ required: true, type: mongoose_2.Types.ObjectId }),
     __metadata("design:type", mongoose_2.Types.ObjectId)
 ], Reservation.prototype, "userId", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: hotel_room_schema_1.HotelRoom.name, required: true }),
+    (0, mongoose_1.Prop)({ required: true, type: mongoose_2.Types.ObjectId }),
     __metadata("design:type", mongoose_2.Types.ObjectId)
-], Reservation.prototype, "hotelRoom", void 0);
+], Reservation.prototype, "hotelId", void 0);
+__decorate([
+    (0, mongoose_1.Prop)({ required: true, type: mongoose_2.Types.ObjectId }),
+    __metadata("design:type", mongoose_2.Types.ObjectId)
+], Reservation.prototype, "roomId", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
     __metadata("design:type", Date)
-], Reservation.prototype, "startDate", void 0);
+], Reservation.prototype, "dateStart", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
     __metadata("design:type", Date)
-], Reservation.prototype, "endDate", void 0);
+], Reservation.prototype, "dateEnd", void 0);
 exports.Reservation = Reservation = __decorate([
     (0, mongoose_1.Schema)({ timestamps: true })
 ], Reservation);

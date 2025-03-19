@@ -1,13 +1,15 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, IsNumber } from 'class-validator';
 
 export class SearchHotelDto {
-  @IsString()
   @IsOptional()
+  @IsString()
   title?: string;
 
   @IsOptional()
+  @IsNumber()
   limit?: number;
 
   @IsOptional()
+  @IsNumber()
   offset?: number;
 }

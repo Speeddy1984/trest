@@ -1,14 +1,19 @@
-import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { IsOptional, IsString, IsBoolean, IsArray } from 'class-validator';
 
 export class UpdateHotelRoomDto {
-  @IsString()
   @IsOptional()
+  @IsString()
   description?: string;
 
-  @IsString()
   @IsOptional()
-  hotelId?: string;
+  @IsBoolean()
+  isEnabled?: boolean;
 
   @IsOptional()
-  isEnabled?: boolean;
+  @IsArray()
+  images?: string[];
+
+  @IsOptional()
+  @IsString()
+  hotelId?: string;
 }

@@ -1,12 +1,19 @@
-import { IsDateString, IsMongoId } from 'class-validator';
+import { IsNotEmpty, IsString, IsDateString } from 'class-validator';
 
 export class CreateReservationDto {
-  @IsMongoId()
-  hotelRoom!: string;
+  @IsNotEmpty()
+  @IsString()
+  hotelRoom!: string;  // id номера
 
-  @IsDateString()
-  startDate!: Date;
+  @IsNotEmpty()
+  @IsString()
+  hotelId!: string;
 
+  @IsNotEmpty()
   @IsDateString()
-  endDate!: Date;
+  startDate!: string;
+
+  @IsNotEmpty()
+  @IsDateString()
+  endDate!: string;
 }

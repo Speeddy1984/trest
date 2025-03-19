@@ -21,46 +21,47 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ReservationService = void 0;
+exports.ReservationManagerController = void 0;
 const common_1 = require("@nestjs/common");
-const mongoose_1 = require("@nestjs/mongoose");
-const reservation_schema_1 = require("./schemas/reservation.schema");
-const mongoose_2 = require("mongoose");
-let ReservationService = class ReservationService {
-    constructor(reservationModel) {
-        this.reservationModel = reservationModel;
+const reservation_service_1 = require("./reservation.service");
+const authenticated_guard_1 = require("../auth/guards/authenticated.guard");
+const roles_guard_1 = require("../auth/guards/roles.guard");
+const common_2 = require("@nestjs/common");
+let ReservationManagerController = class ReservationManagerController {
+    constructor(reservationService) {
+        this.reservationService = reservationService;
     }
-    // Проверка доступности номера для бронирования (здесь можно реализовать проверку пересечения дат)
-    addReservation(data) {
+    getReservationsByUser(userId) {
         return __awaiter(this, void 0, void 0, function* () {
-            // В реальном проекте здесь добавить логику проверки занятости номера
-            const newReservation = new this.reservationModel({
-                userId: new mongoose_2.Types.ObjectId(data.userId),
-                hotelId: new mongoose_2.Types.ObjectId(data.hotelId),
-                roomId: new mongoose_2.Types.ObjectId(data.roomId),
-                dateStart: data.dateStart,
-                dateEnd: data.dateEnd,
-            });
-            return newReservation.save();
+            const reservations = yield this.reservationService.getReservations({ userId });
+            return reservations;
         });
     }
     removeReservation(id) {
         return __awaiter(this, void 0, void 0, function* () {
-            const result = yield this.reservationModel.findByIdAndDelete(id);
-            if (!result) {
-                throw new common_1.BadRequestException('Бронь с указанным ID не существует');
-            }
-        });
-    }
-    getReservations(filter) {
-        return __awaiter(this, void 0, void 0, function* () {
-            return this.reservationModel.find({ userId: filter.userId });
+            yield this.reservationService.removeReservation(id);
+            return {};
         });
     }
 };
-exports.ReservationService = ReservationService;
-exports.ReservationService = ReservationService = __decorate([
-    (0, common_1.Injectable)(),
-    __param(0, (0, mongoose_1.InjectModel)(reservation_schema_1.Reservation.name)),
-    __metadata("design:paramtypes", [mongoose_2.Model])
-], ReservationService);
+exports.ReservationManagerController = ReservationManagerController;
+__decorate([
+    (0, common_1.Get)(':userId'),
+    __param(0, (0, common_1.Param)('userId')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], ReservationManagerController.prototype, "getReservationsByUser", null);
+__decorate([
+    (0, common_1.Delete)(':id'),
+    __param(0, (0, common_1.Param)('id')),
+    __metadata("design:type", Function),
+    __metadata("design:paramtypes", [String]),
+    __metadata("design:returntype", Promise)
+], ReservationManagerController.prototype, "removeReservation", null);
+exports.ReservationManagerController = ReservationManagerController = __decorate([
+    (0, common_1.Controller)('api/manager/reservations'),
+    (0, common_1.UseGuards)(authenticated_guard_1.AuthenticatedGuard, roles_guard_1.RolesGuard),
+    (0, common_2.SetMetadata)('roles', ['manager']),
+    __metadata("design:paramtypes", [reservation_service_1.ReservationService])
+], ReservationManagerController);
