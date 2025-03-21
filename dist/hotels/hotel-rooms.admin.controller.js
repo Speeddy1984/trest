@@ -64,9 +64,17 @@ let HotelRoomsAdminController = class HotelRoomsAdminController {
     updateHotelRoom(id, files, updateHotelRoomDto) {
         return __awaiter(this, void 0, void 0, function* () {
             var _a, _b, _c;
-            const imageUrls = files.map(file => `/uploads/${file.filename}`);
-            // Объединяем новые файлы с уже переданными ссылками (если они есть)
-            let updateData = Object.assign(Object.assign({}, updateHotelRoomDto), { images: [...(updateHotelRoomDto.images || []), ...imageUrls] });
+            // Получаем текущие данные комнаты из базы
+            const existingRoom = yield this.hotelsService.findHotelRoomById(id);
+            if (!existingRoom) {
+                throw new common_2.NotFoundException('Hotel room not found');
+            }
+            // Получаем текущие изображения из базы
+            const existingImages = existingRoom.images || [];
+            const newImages = files.map(file => `/uploads/${file.filename}`);
+            // Объединяем старые и новые изображения
+            const updatedImages = [...existingImages, ...newImages];
+            let updateData = Object.assign(Object.assign({}, updateHotelRoomDto), { images: updatedImages });
             if (updateData.hotelId) {
                 updateData.hotel = new mongoose_1.Types.ObjectId(updateData.hotelId);
                 delete updateData.hotelId;

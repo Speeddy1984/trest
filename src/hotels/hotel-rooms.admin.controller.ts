@@ -5,7 +5,7 @@ import { CreateHotelRoomDto } from './dto/create-hotel-room.dto';
 import { UpdateHotelRoomDto } from './dto/update-hotel-room.dto';
 import { AuthenticatedGuard } from '../auth/guards/authenticated.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
-import { SetMetadata } from '@nestjs/common';
+import { SetMetadata,NotFoundException } from '@nestjs/common';
 import { Express } from 'express';
 import { Types } from 'mongoose';
 
@@ -51,13 +51,26 @@ async updateHotelRoom(
   @UploadedFiles() files: Express.Multer.File[],
   @Body() updateHotelRoomDto: UpdateHotelRoomDto,
 ) {
-  const imageUrls = files.map(file => `/uploads/${file.filename}`);
-  // Объединяем новые файлы с уже переданными ссылками (если они есть)
-  let updateData: any = { ...updateHotelRoomDto, images: [...(updateHotelRoomDto.images || []), ...imageUrls] };
+  // Получаем текущие данные комнаты из базы
+  const existingRoom = await this.hotelsService.findHotelRoomById(id);
+  if (!existingRoom) {
+    throw new NotFoundException('Hotel room not found');
+  }
+
+  // Получаем текущие изображения из базы
+  const existingImages = existingRoom.images || [];
+  const newImages = files.map(file => `/uploads/${file.filename}`);
+
+  // Объединяем старые и новые изображения
+  const updatedImages = [...existingImages, ...newImages];
+
+  let updateData: any = { ...updateHotelRoomDto, images: updatedImages };
+
   if (updateData.hotelId) {
     updateData.hotel = new Types.ObjectId(updateData.hotelId);
     delete updateData.hotelId;
   }
+
   const room = await this.hotelsService.updateHotelRoom(id, updateData);
   return {
     id: (room as any)._id,

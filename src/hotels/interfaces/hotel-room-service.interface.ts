@@ -8,8 +8,8 @@ export interface SearchRoomsParams {
 }
 
 export interface IHotelRoomService {
-  create(data: Partial<HotelRoom>): Promise<HotelRoom>;
-  findById(id: string): Promise<HotelRoom>;
-  search(params: SearchRoomsParams): Promise<HotelRoom[]>;
-  update(id: string, data: Partial<HotelRoom>): Promise<HotelRoom>;
+  createHotelRoom(data: Partial<HotelRoom>): Promise<HotelRoom>;
+  findHotelRoomById(id: string): Promise<HotelRoom>;
+  searchHotelRooms(params: SearchRoomsParams): Promise<HotelRoom[]>;
+  updateHotelRoom(id: string, data: Partial<HotelRoom>): Promise<HotelRoom>;
 }

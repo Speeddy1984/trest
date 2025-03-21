@@ -70,7 +70,10 @@ let HotelsService = class HotelsService {
     createHotelRoom(data) {
         return __awaiter(this, void 0, void 0, function* () {
             const newRoom = new this.hotelRoomModel(data);
-            return newRoom.save();
+            const savedRoom = yield newRoom.save();
+            // Популяция поля hotel
+            yield savedRoom.populate('hotel');
+            return savedRoom;
         });
     }
     findHotelRoomById(id) {
@@ -84,7 +87,10 @@ let HotelsService = class HotelsService {
     }
     searchHotelRooms(params) {
         return __awaiter(this, void 0, void 0, function* () {
-            const filter = { hotel: params.hotel };
+            const filter = {};
+            if (params.hotel) {
+                filter.hotel = params.hotel;
+            }
             if (typeof params.isEnabled === 'boolean') {
                 filter.isEnabled = params.isEnabled;
             }

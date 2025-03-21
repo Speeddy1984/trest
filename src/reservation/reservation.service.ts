@@ -41,6 +41,7 @@ export class ReservationService {
   }
 
   async getReservations(filter: ReservationSearchOptions): Promise<Reservation[]> {
-    return this.reservationModel.find({ userId: filter.userId });
+    // Преобразуем userId в ObjectId для корректного сравнения
+    return this.reservationModel.find({ userId: new Types.ObjectId(filter.userId) });
   }
 }

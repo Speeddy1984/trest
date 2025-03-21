@@ -12,8 +12,8 @@ export interface UpdateHotelParams {
 }
 
 export interface IHotelService {
-  create(data: any): Promise<Hotel>;
-  findById(id: string): Promise<Hotel>;
-  search(params: SearchHotelParams): Promise<Hotel[]>;
-  update(id: string, data: UpdateHotelParams): Promise<Hotel>;
+  createHotel(data: { title: string; description?: string }): Promise<Hotel>;
+  findHotelById(id: string): Promise<Hotel>;
+  searchHotels(params: SearchHotelParams): Promise<Hotel[]>;
+  updateHotel(id: string, data: UpdateHotelParams): Promise<Hotel>;
 }

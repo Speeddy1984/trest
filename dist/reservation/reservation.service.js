@@ -54,7 +54,8 @@ let ReservationService = class ReservationService {
     }
     getReservations(filter) {
         return __awaiter(this, void 0, void 0, function* () {
-            return this.reservationModel.find({ userId: filter.userId });
+            // Преобразуем userId в ObjectId для корректного сравнения
+            return this.reservationModel.find({ userId: new mongoose_2.Types.ObjectId(filter.userId) });
         });
     }
 };

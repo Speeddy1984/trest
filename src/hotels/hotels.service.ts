@@ -3,27 +3,11 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Hotel, HotelDocument } from './schemas/hotel.schema';
 import { HotelRoom, HotelRoomDocument } from './schemas/hotel-room.schema';
 import { Model, Types } from 'mongoose';
-
-interface SearchHotelParams {
-  limit: number;
-  offset: number;
-  title?: string;
-}
-
-interface UpdateHotelParams {
-  title: string;
-  description: string;
-}
-
-interface SearchRoomsParams {
-  limit: number;
-  offset: number;
-  hotel: string;
-  isEnabled?: boolean;
-}
+import { SearchHotelParams, UpdateHotelParams, IHotelService } from './interfaces/hotel-service.interface';
+import { SearchRoomsParams, IHotelRoomService } from './interfaces/hotel-room-service.interface';
 
 @Injectable()
-export class HotelsService {
+export class HotelsService implements IHotelService, IHotelRoomService {
   constructor(
     @InjectModel(Hotel.name) private hotelModel: Model<HotelDocument>,
     @InjectModel(HotelRoom.name) private hotelRoomModel: Model<HotelRoomDocument>,
@@ -62,7 +46,10 @@ export class HotelsService {
   // Методы для номеров гостиниц
   async createHotelRoom(data: Partial<HotelRoom>): Promise<HotelRoomDocument> {
     const newRoom = new this.hotelRoomModel(data);
-    return newRoom.save();
+    const savedRoom = await newRoom.save();
+    // Популяция поля hotel
+    await savedRoom.populate('hotel');
+    return savedRoom;
   }
 
   async findHotelRoomById(id: string): Promise<HotelRoomDocument> {
@@ -74,7 +61,10 @@ export class HotelsService {
   }
 
   async searchHotelRooms(params: SearchRoomsParams): Promise<HotelRoomDocument[]> {
-    const filter: any = { hotel: params.hotel };
+    const filter: any = {};
+    if (params.hotel) {
+      filter.hotel = params.hotel;
+    }
     if (typeof params.isEnabled === 'boolean') {
       filter.isEnabled = params.isEnabled;
     }
@@ -84,6 +74,7 @@ export class HotelsService {
       .skip(params.offset)
       .populate('hotel');
   }
+  
 
   async updateHotelRoom(id: string, data: Partial<HotelRoom>): Promise<HotelRoomDocument> {
     const room = await this.hotelRoomModel.findByIdAndUpdate(id, data, { new: true }).populate('hotel');
