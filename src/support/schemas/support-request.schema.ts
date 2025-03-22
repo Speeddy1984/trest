@@ -1,17 +1,17 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
-import { Message } from './message.schema';
+import { Message, MessageSchema } from './message.schema';
+
+export type SupportRequestDocument = SupportRequest & Document;
 
 @Schema({ timestamps: true })
-export class SupportRequest extends Document {
-  @Prop({ type: Types.ObjectId, required: true, ref: 'User' })
+export class SupportRequest {
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
   user!: Types.ObjectId;
 
-  @Prop({ default: Date.now })
-  createdAt!: Date;
-
-  @Prop({ type: [{ type: Types.ObjectId, ref: 'Message' }] })
-  messages!: Types.ObjectId[]; // Используем ObjectId для ссылок
+  // Сообщения можно хранить в виде массива вложенных документов
+  @Prop({ type: [MessageSchema], default: [] })
+  messages!: Message[];
 
   @Prop({ default: true })
   isActive!: boolean;

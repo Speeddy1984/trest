@@ -15,17 +15,17 @@ class SendMessageDto {
 }
 exports.SendMessageDto = SendMessageDto;
 __decorate([
-    (0, class_validator_1.IsMongoId)(),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], SendMessageDto.prototype, "author", void 0);
 __decorate([
-    (0, class_validator_1.IsMongoId)(),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], SendMessageDto.prototype, "supportRequest", void 0);
 __decorate([
-    (0, class_validator_1.IsString)(),
     (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
 ], SendMessageDto.prototype, "text", void 0);

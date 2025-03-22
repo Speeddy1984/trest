@@ -1,15 +1,15 @@
-import { IsMongoId, IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class SendMessageDto {
-  @IsMongoId()
   @IsNotEmpty()
-  author!: string;
-
-  @IsMongoId()
-  @IsNotEmpty()
-  supportRequest!: string;
-
   @IsString()
+  author!: string; // ID автора сообщения
+
   @IsNotEmpty()
+  @IsString()
+  supportRequest!: string; // ID обращения
+
+  @IsNotEmpty()
+  @IsString()
   text!: string;
 }

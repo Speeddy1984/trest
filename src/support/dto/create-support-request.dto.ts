@@ -1,11 +1,11 @@
-import { IsMongoId, IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateSupportRequestDto {
-  @IsMongoId()
   @IsNotEmpty()
-  user!: string;
-
   @IsString()
+  user!: string; // ID пользователя (брать из сессии)
+
   @IsNotEmpty()
+  @IsString()
   text!: string;
 }

@@ -1,137 +1,136 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { SupportRequest, SupportRequestDocument } from './schemas/support-request.schema';
+import { Message, MessageDocument } from './schemas/message.schema';
+import { Model, Types } from 'mongoose';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { SupportRequest, Message } from './interfaces/support.interface';
-import { CreateSupportRequestDto } from './dto/create-support-request.dto';
-import { SendMessageDto } from './dto/send-message.dto';
-import { MarkMessagesAsReadDto } from './dto/mark-messages-read.dto';
-import { ISupportRequestService } from './interfaces/support.interface';
-import { GetChatListParams } from './interfaces/support.interface';
+import { GetChatListParams } from './interfaces/support-request.interface';
+import { SupportGateway } from './support.gateway';
 
 @Injectable()
-export class SupportService implements ISupportRequestService {
+export class SupportService {
   constructor(
-    @InjectModel('SupportRequest')
-    private supportRequestModel: Model<SupportRequest>,
-    @InjectModel('Message')
-    private messageModel: Model<Message>,
-    private eventEmitter: EventEmitter2, // Добавляем EventEmitter
+    @InjectModel(SupportRequest.name) private supportRequestModel: Model<SupportRequestDocument>,
+    @InjectModel(Message.name) private messageModel: Model<MessageDocument>,
+    private eventEmitter: EventEmitter2,
+    private readonly supportGateway: SupportGateway, // инъекция шлюза
   ) {}
 
-  async createSupportRequest(data: CreateSupportRequestDto): Promise<SupportRequest> {
-    const message = new this.messageModel({
-      author: data.user,
-      text: data.text,
+  // Клиентский сервис
+  async createSupportRequest(data: { user: string; text: string }): Promise<SupportRequestDocument> {
+    const newRequest = new this.supportRequestModel({
+      user: new Types.ObjectId(data.user),
+      messages: [{
+        author: new Types.ObjectId(data.user),
+        text: data.text,
+      }],
+      isActive: true,
     });
-    await message.save();
-
-    const supportRequest = new this.supportRequestModel({
-      user: data.user,
-      messages: [message._id],
-    });
-    const savedRequest = await supportRequest.save();
-
-    // Уведомляем о новом запросе поддержки
-    this.eventEmitter.emit('supportRequest.created', savedRequest);
-
-    return savedRequest;
+    return newRequest.save();
   }
 
-  async sendMessage(data: SendMessageDto): Promise<Message> {
-    const message = new this.messageModel({
-      author: data.author,
-      supportRequest: data.supportRequest, // Добавляем supportRequest
-      text: data.text,
-    });
-    await message.save();
-  
-    await this.supportRequestModel.findByIdAndUpdate(
-      data.supportRequest,
-      { $push: { messages: message._id } },
-    );
-  
-    this.eventEmitter.emit('message.created', message);
-    return message;
-  }
-
-  async markMessagesAsRead(data: MarkMessagesAsReadDto): Promise<void> {
-    await this.messageModel.updateMany(
+  async markMessagesAsReadClient(params: { user: string; supportRequest: string; createdBefore: Date }): Promise<void> {
+    // Обновляем все сообщения, которые были отправлены не этим пользователем и не прочитаны
+    await this.supportRequestModel.updateOne(
+      { _id: new Types.ObjectId(params.supportRequest) },
       {
-        supportRequest: data.supportRequest, // Используем supportRequest
-        author: { $ne: data.user },
-        readAt: { $exists: false },
-        sentAt: { $lte: data.createdBefore },
+        $set: {
+          'messages.$[elem].readAt': new Date(),
+        },
       },
-      { $set: { readAt: new Date() } },
+      {
+        arrayFilters: [{ 'elem.author': { $ne: new Types.ObjectId(params.user) }, 'elem.sentAt': { $lte: params.createdBefore } }],
+      },
     );
-  
-    this.eventEmitter.emit('messages.read', data);
   }
 
-  async findSupportRequests(params: GetChatListParams): Promise<SupportRequest[]> {
-    const query: any = {};
-
-    if (params.user) query.user = params.user;
-    if (params.isActive !== undefined) query.isActive = params.isActive;
-
-    return this.supportRequestModel.find(query).exec();
-  }
-
-  async getMessages(supportRequest: string): Promise<Message[]> {
-    const request = await this.supportRequestModel
-      .findById(supportRequest)
-      .populate({
-        path: 'messages',
-        model: 'Message', // Указываем модель для populate
-      })
-      .exec();
-  
+  async getUnreadCountClient(supportRequest: string, user: string): Promise<number> {
+    const request = await this.supportRequestModel.findById(supportRequest);
     if (!request) {
       throw new NotFoundException('Support request not found');
     }
-  
-    return request.messages as unknown as Message[]; // Приводим тип
+    // Считаем сообщения, отправленные не этим пользователем и без readAt
+    return request.messages.filter(
+      msg => msg.author.toString() !== user && !msg.readAt,
+    ).length;
   }
-  
-  async getUnreadCount(supportRequest: string): Promise<number> {
-    const count = await this.messageModel
-      .countDocuments({
-        supportRequest,
-        readAt: { $exists: false },
-      })
-      .exec();
 
-    return count;
+  // Сервис для сотрудников (менеджеров)
+  async markMessagesAsReadEmployee(params: { user: string; supportRequest: string; createdBefore: Date }): Promise<void> {
+    // Обновляем сообщения, отправленные пользователем (клиентом), которые не прочитаны
+    await this.supportRequestModel.updateOne(
+      { _id: new Types.ObjectId(params.supportRequest) },
+      {
+        $set: {
+          'messages.$[elem].readAt': new Date(),
+        },
+      },
+      {
+        arrayFilters: [{ 'elem.author': { $eq: new Types.ObjectId(params.user) }, 'elem.sentAt': { $lte: params.createdBefore } }],
+      },
+    );
+  }
+
+  async getUnreadCountEmployee(supportRequest: string, user: string): Promise<number> {
+    const request = await this.supportRequestModel.findById(supportRequest);
+    if (!request) {
+      throw new NotFoundException('Support request not found');
+    }
+    // Считаем сообщения, отправленные этим пользователем (клиентом) без readAt
+    return request.messages.filter(
+      msg => msg.author.toString() === user && !msg.readAt,
+    ).length;
   }
 
   async closeRequest(supportRequest: string): Promise<void> {
-    await this.supportRequestModel.findByIdAndUpdate(supportRequest, {
-      isActive: false,
-    });
-
-    // Уведомляем о закрытии запроса
-    this.eventEmitter.emit('supportRequest.closed', supportRequest);
+    await this.supportRequestModel.findByIdAndUpdate(supportRequest, { isActive: false });
   }
 
-  // Реализация метода subscribe
-  subscribe(
-    handler: (supportRequest: SupportRequest, message: Message) => void,
-  ): () => void {
-    const listener = (message: Message) => {
-      this.supportRequestModel
-        .findById(message.supportRequest)
-        .then((supportRequest) => {
-          if (supportRequest) {
-            handler(supportRequest as SupportRequest, message);
-          }
-        });
+  async getSupportRequests(filter: { user?: string; isActive?: boolean; limit?: number; offset?: number }): Promise<SupportRequestDocument[]> {
+    const query: any = {};
+    if (filter.user) {
+      query.user = new Types.ObjectId(filter.user);
+    }
+    if (typeof filter.isActive === 'boolean') {
+      query.isActive = filter.isActive;
+    }
+    const results = await this.supportRequestModel
+      .find(query)
+      .limit(filter.limit ?? 10)
+      .skip(filter.offset ?? 0)
+      .exec();
+    console.log('Found supportRequests length:', results.length);
+    return results;
+  }
+
+  async getMessages(supportRequest: string): Promise<Message[]> {
+    const request = await this.supportRequestModel.findById(supportRequest);
+    if (!request) {
+      throw new NotFoundException('Support request not found');
+    }
+    return request.messages;
+  }
+
+  async sendMessage(data: { author: string; supportRequest: string; text: string }): Promise<Message> {
+    const request = await this.supportRequestModel.findById(data.supportRequest);
+    if (!request) {
+      throw new NotFoundException('Support request not found');
+    }
+    const newMessage = {
+      author: new Types.ObjectId(data.author),
+      text: data.text,
+      sentAt: new Date(),
     };
-  
-    this.eventEmitter.on('message.created', listener);
-  
-    return () => {
-      this.eventEmitter.off('message.created', listener);
-    };
+    request.messages.push(newMessage as any);
+    await request.save();
+    // Трансляция нового сообщения через WebSocket
+    this.supportGateway.broadcastNewMessage(data.supportRequest, newMessage);
+    return newMessage as any;
+  }
+
+
+  subscribe(handler: (supportRequest: SupportRequest, message: Message) => void): () => void {
+    this.eventEmitter.on('support.message', handler);
+    return () => this.eventEmitter.off('support.message', handler);
   }
 }

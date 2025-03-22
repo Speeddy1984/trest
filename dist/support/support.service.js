@@ -24,123 +24,140 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SupportService = void 0;
 const common_1 = require("@nestjs/common");
 const mongoose_1 = require("@nestjs/mongoose");
+const support_request_schema_1 = require("./schemas/support-request.schema");
+const message_schema_1 = require("./schemas/message.schema");
 const mongoose_2 = require("mongoose");
 const event_emitter_1 = require("@nestjs/event-emitter");
+const support_gateway_1 = require("./support.gateway");
 let SupportService = class SupportService {
-    constructor(supportRequestModel, messageModel, eventEmitter) {
+    constructor(supportRequestModel, messageModel, eventEmitter, supportGateway) {
         this.supportRequestModel = supportRequestModel;
         this.messageModel = messageModel;
         this.eventEmitter = eventEmitter;
+        this.supportGateway = supportGateway;
     }
+    // Клиентский сервис
     createSupportRequest(data) {
         return __awaiter(this, void 0, void 0, function* () {
-            const message = new this.messageModel({
-                author: data.user,
-                text: data.text,
+            const newRequest = new this.supportRequestModel({
+                user: new mongoose_2.Types.ObjectId(data.user),
+                messages: [{
+                        author: new mongoose_2.Types.ObjectId(data.user),
+                        text: data.text,
+                    }],
+                isActive: true,
             });
-            yield message.save();
-            const supportRequest = new this.supportRequestModel({
-                user: data.user,
-                messages: [message._id],
+            return newRequest.save();
+        });
+    }
+    markMessagesAsReadClient(params) {
+        return __awaiter(this, void 0, void 0, function* () {
+            // Обновляем все сообщения, которые были отправлены не этим пользователем и не прочитаны
+            yield this.supportRequestModel.updateOne({ _id: new mongoose_2.Types.ObjectId(params.supportRequest) }, {
+                $set: {
+                    'messages.$[elem].readAt': new Date(),
+                },
+            }, {
+                arrayFilters: [{ 'elem.author': { $ne: new mongoose_2.Types.ObjectId(params.user) }, 'elem.sentAt': { $lte: params.createdBefore } }],
             });
-            const savedRequest = yield supportRequest.save();
-            // Уведомляем о новом запросе поддержки
-            this.eventEmitter.emit('supportRequest.created', savedRequest);
-            return savedRequest;
         });
     }
-    sendMessage(data) {
+    getUnreadCountClient(supportRequest, user) {
         return __awaiter(this, void 0, void 0, function* () {
-            const message = new this.messageModel({
-                author: data.author,
-                supportRequest: data.supportRequest, // Добавляем supportRequest
-                text: data.text,
-            });
-            yield message.save();
-            yield this.supportRequestModel.findByIdAndUpdate(data.supportRequest, { $push: { messages: message._id } });
-            this.eventEmitter.emit('message.created', message);
-            return message;
-        });
-    }
-    markMessagesAsRead(data) {
-        return __awaiter(this, void 0, void 0, function* () {
-            yield this.messageModel.updateMany({
-                supportRequest: data.supportRequest, // Используем supportRequest
-                author: { $ne: data.user },
-                readAt: { $exists: false },
-                sentAt: { $lte: data.createdBefore },
-            }, { $set: { readAt: new Date() } });
-            this.eventEmitter.emit('messages.read', data);
-        });
-    }
-    findSupportRequests(params) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const query = {};
-            if (params.user)
-                query.user = params.user;
-            if (params.isActive !== undefined)
-                query.isActive = params.isActive;
-            return this.supportRequestModel.find(query).exec();
-        });
-    }
-    getMessages(supportRequest) {
-        return __awaiter(this, void 0, void 0, function* () {
-            const request = yield this.supportRequestModel
-                .findById(supportRequest)
-                .populate({
-                path: 'messages',
-                model: 'Message', // Указываем модель для populate
-            })
-                .exec();
+            const request = yield this.supportRequestModel.findById(supportRequest);
             if (!request) {
                 throw new common_1.NotFoundException('Support request not found');
             }
-            return request.messages; // Приводим тип
+            // Считаем сообщения, отправленные не этим пользователем и без readAt
+            return request.messages.filter(msg => msg.author.toString() !== user && !msg.readAt).length;
         });
     }
-    getUnreadCount(supportRequest) {
+    // Сервис для сотрудников (менеджеров)
+    markMessagesAsReadEmployee(params) {
         return __awaiter(this, void 0, void 0, function* () {
-            const count = yield this.messageModel
-                .countDocuments({
-                supportRequest,
-                readAt: { $exists: false },
-            })
-                .exec();
-            return count;
+            // Обновляем сообщения, отправленные пользователем (клиентом), которые не прочитаны
+            yield this.supportRequestModel.updateOne({ _id: new mongoose_2.Types.ObjectId(params.supportRequest) }, {
+                $set: {
+                    'messages.$[elem].readAt': new Date(),
+                },
+            }, {
+                arrayFilters: [{ 'elem.author': { $eq: new mongoose_2.Types.ObjectId(params.user) }, 'elem.sentAt': { $lte: params.createdBefore } }],
+            });
+        });
+    }
+    getUnreadCountEmployee(supportRequest, user) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const request = yield this.supportRequestModel.findById(supportRequest);
+            if (!request) {
+                throw new common_1.NotFoundException('Support request not found');
+            }
+            // Считаем сообщения, отправленные этим пользователем (клиентом) без readAt
+            return request.messages.filter(msg => msg.author.toString() === user && !msg.readAt).length;
         });
     }
     closeRequest(supportRequest) {
         return __awaiter(this, void 0, void 0, function* () {
-            yield this.supportRequestModel.findByIdAndUpdate(supportRequest, {
-                isActive: false,
-            });
-            // Уведомляем о закрытии запроса
-            this.eventEmitter.emit('supportRequest.closed', supportRequest);
+            yield this.supportRequestModel.findByIdAndUpdate(supportRequest, { isActive: false });
         });
     }
-    // Реализация метода subscribe
+    getSupportRequests(filter) {
+        return __awaiter(this, void 0, void 0, function* () {
+            var _a, _b;
+            const query = {};
+            if (filter.user) {
+                query.user = new mongoose_2.Types.ObjectId(filter.user);
+            }
+            if (typeof filter.isActive === 'boolean') {
+                query.isActive = filter.isActive;
+            }
+            const results = yield this.supportRequestModel
+                .find(query)
+                .limit((_a = filter.limit) !== null && _a !== void 0 ? _a : 10)
+                .skip((_b = filter.offset) !== null && _b !== void 0 ? _b : 0)
+                .exec();
+            console.log('Found supportRequests length:', results.length);
+            return results;
+        });
+    }
+    getMessages(supportRequest) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const request = yield this.supportRequestModel.findById(supportRequest);
+            if (!request) {
+                throw new common_1.NotFoundException('Support request not found');
+            }
+            return request.messages;
+        });
+    }
+    sendMessage(data) {
+        return __awaiter(this, void 0, void 0, function* () {
+            const request = yield this.supportRequestModel.findById(data.supportRequest);
+            if (!request) {
+                throw new common_1.NotFoundException('Support request not found');
+            }
+            const newMessage = {
+                author: new mongoose_2.Types.ObjectId(data.author),
+                text: data.text,
+                sentAt: new Date(),
+            };
+            request.messages.push(newMessage);
+            yield request.save();
+            // Трансляция нового сообщения через WebSocket
+            this.supportGateway.broadcastNewMessage(data.supportRequest, newMessage);
+            return newMessage;
+        });
+    }
     subscribe(handler) {
-        const listener = (message) => {
-            this.supportRequestModel
-                .findById(message.supportRequest)
-                .then((supportRequest) => {
-                if (supportRequest) {
-                    handler(supportRequest, message);
-                }
-            });
-        };
-        this.eventEmitter.on('message.created', listener);
-        return () => {
-            this.eventEmitter.off('message.created', listener);
-        };
+        this.eventEmitter.on('support.message', handler);
+        return () => this.eventEmitter.off('support.message', handler);
     }
 };
 exports.SupportService = SupportService;
 exports.SupportService = SupportService = __decorate([
     (0, common_1.Injectable)(),
-    __param(0, (0, mongoose_1.InjectModel)('SupportRequest')),
-    __param(1, (0, mongoose_1.InjectModel)('Message')),
+    __param(0, (0, mongoose_1.InjectModel)(support_request_schema_1.SupportRequest.name)),
+    __param(1, (0, mongoose_1.InjectModel)(message_schema_1.Message.name)),
     __metadata("design:paramtypes", [mongoose_2.Model,
         mongoose_2.Model,
-        event_emitter_1.EventEmitter2])
+        event_emitter_1.EventEmitter2,
+        support_gateway_1.SupportGateway])
 ], SupportService);

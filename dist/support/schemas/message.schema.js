@@ -12,21 +12,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.MessageSchema = exports.Message = void 0;
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
-let Message = class Message extends mongoose_2.Document {
+let Message = class Message {
 };
 exports.Message = Message;
 __decorate([
-    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, required: true, ref: 'User' }),
+    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'User', required: true }),
     __metadata("design:type", mongoose_2.Types.ObjectId)
 ], Message.prototype, "author", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, required: true, ref: 'SupportRequest' }),
-    __metadata("design:type", mongoose_2.Types.ObjectId)
-], Message.prototype, "supportRequest", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ default: Date.now }),
-    __metadata("design:type", Date)
-], Message.prototype, "sentAt", void 0);
 __decorate([
     (0, mongoose_1.Prop)({ required: true }),
     __metadata("design:type", String)
@@ -36,6 +28,6 @@ __decorate([
     __metadata("design:type", Date)
 ], Message.prototype, "readAt", void 0);
 exports.Message = Message = __decorate([
-    (0, mongoose_1.Schema)({ timestamps: true })
+    (0, mongoose_1.Schema)({ timestamps: { createdAt: 'sentAt', updatedAt: false } })
 ], Message);
 exports.MessageSchema = mongoose_1.SchemaFactory.createForClass(Message);

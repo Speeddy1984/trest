@@ -9,18 +9,23 @@ var __metadata = (this && this.__metadata) || function (k, v) {
     if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CreateSupportRequestDto = void 0;
+exports.MarkMessagesAsReadDto = void 0;
 const class_validator_1 = require("class-validator");
-class CreateSupportRequestDto {
+class MarkMessagesAsReadDto {
 }
-exports.CreateSupportRequestDto = CreateSupportRequestDto;
+exports.MarkMessagesAsReadDto = MarkMessagesAsReadDto;
 __decorate([
     (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], CreateSupportRequestDto.prototype, "user", void 0);
+], MarkMessagesAsReadDto.prototype, "user", void 0);
 __decorate([
     (0, class_validator_1.IsNotEmpty)(),
     (0, class_validator_1.IsString)(),
     __metadata("design:type", String)
-], CreateSupportRequestDto.prototype, "text", void 0);
+], MarkMessagesAsReadDto.prototype, "supportRequest", void 0);
+__decorate([
+    (0, class_validator_1.IsNotEmpty)(),
+    (0, class_validator_1.IsDateString)(),
+    __metadata("design:type", String)
+], MarkMessagesAsReadDto.prototype, "createdBefore", void 0);

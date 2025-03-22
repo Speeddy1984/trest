@@ -12,19 +12,16 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.SupportRequestSchema = exports.SupportRequest = void 0;
 const mongoose_1 = require("@nestjs/mongoose");
 const mongoose_2 = require("mongoose");
-let SupportRequest = class SupportRequest extends mongoose_2.Document {
+const message_schema_1 = require("./message.schema");
+let SupportRequest = class SupportRequest {
 };
 exports.SupportRequest = SupportRequest;
 __decorate([
-    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, required: true, ref: 'User' }),
+    (0, mongoose_1.Prop)({ type: mongoose_2.Types.ObjectId, ref: 'User', required: true }),
     __metadata("design:type", mongoose_2.Types.ObjectId)
 ], SupportRequest.prototype, "user", void 0);
 __decorate([
-    (0, mongoose_1.Prop)({ default: Date.now }),
-    __metadata("design:type", Date)
-], SupportRequest.prototype, "createdAt", void 0);
-__decorate([
-    (0, mongoose_1.Prop)({ type: [{ type: mongoose_2.Types.ObjectId, ref: 'Message' }] }),
+    (0, mongoose_1.Prop)({ type: [message_schema_1.MessageSchema], default: [] }),
     __metadata("design:type", Array)
 ], SupportRequest.prototype, "messages", void 0);
 __decorate([
